@@ -1,0 +1,438 @@
+Script started on Sat 02 Jun 2018 03:51:33 PM PDT
+[?1034hbash-4.2$ pwd
+/afs/cats.ucsc.edu/users/s/aljilee/CMPS101S18PA4
+bash-4.2$ ls -l
+total 14
+-rw-r--r--. 1 aljilee users  287 Jun  2 15:50 NoteToGrader.txt
+-rw-r--r--. 1 aljilee users    0 Jun  2 15:51 pa4submissionfile.txt
+-rw-r--r--. 1 aljilee users   65 Jun  2 15:50 README.txt
+-rw-r--r--. 1 aljilee users 5288 Jun  2 15:50 test.java
+-rw-r--r--. 1 aljilee users 5392 Jun  2 15:50 Vector.java
+bash-4.2$ cat README.txt 
+Vector.java contains vector class
+Test.java   contains all tests bash-4.2$ cat NoteToGrader.txt 
+For this assignment, we had to finish the vector ADT class and more. The skeleton itself was quite easy, so I finished all the methods that we were required and added some more such as projection and cross product. In addition, I implemented methods for 3D vectors as well as 2D vectors.bash-4.2$ cat Vector.java 
+//CREATED: ALEXANDER LEE 06/03/2018
+
+import java.io.*;
+import java.util.*;
+import java.math.*;
+
+// Vector.java
+// A class that implements the Vector ADT.
+
+// Notes:
+// Angles are always in radians, not degrees.
+
+class Vector 
+{
+    float x;
+    float y;
+    float z;
+    float magnitude;
+    float angle;
+    
+    //Power for floats
+    public float power(final float base, final int power) 
+    {
+        float result = 1;
+        for (int i = 0; i < power; i++) {
+        result *= base;
+    }
+        return result;
+    }
+    
+    //Create a new Vector with no magnitude.
+    public Vector() 
+    {
+        this.x = 0;
+        this.y = 0;
+    }
+    
+    //Takes an x and a y coordinate for the Vector.
+    public Vector(float x, float y) 
+    {
+        this.x = x;
+        this.y = y;
+        this.magnitude = (float)(Math.sqrt(power(x, 2) + power(y, 2)));
+    }
+
+    //Takes an angle and a magnitude for the Vector.
+    public Vector polarVector(float angle, float magnitude) 
+    {
+        Vector polarVector = new Vector();
+        polarVector.angle = angle;
+        polarVector.magnitude = magnitude;
+        polarVector.x = magnitude * (float) Math.cos(angle);
+        polarVector.y = magnitude * (float) Math.sin(angle);
+        return polarVector;
+    }
+
+    //Access functions
+
+    //Returns the x coordinate of the Vector.
+    public float getX() 
+    {
+        return this.x;  
+    }
+
+    //Returns the y coordinate of the Vector.
+    public float getY() 
+    {
+        return this.y;    
+    }
+
+    //Returns the angle of the Vector.   
+    public float getAngle() 
+    {
+        return this.angle;
+    }
+
+    //Returns the magnitude of the Vector.
+    public float getMagnitude() 
+    {
+        return this.magnitude;  
+    }
+    
+    //Adds two vectors
+    public Vector add(Vector other) 
+    {
+        Vector answer = new Vector(0, 0);
+        answer.x = this.x + other.x;
+        answer.y = this.y + other.y;
+        return answer;
+    }
+    
+    //Subtracts two vectors
+    public Vector subtract(Vector other) 
+    {
+        Vector answer = new Vector(0, 0); 
+        answer.x = this.x - other.x;
+        answer.y = this.y - other.y;
+        return answer;
+    }
+
+    //Returns the dot product of this Vector and the given Vector.
+    public float dotProduct(Vector other) 
+    {
+        float answer = (this.x * other.x) + (this.y * other.y);
+        return answer;
+    }
+
+    //Returns this Vector scaled by the given scalar.
+    public Vector scalarMultiply(float scalar) 
+    {
+        Vector answer = new Vector(0, 0);
+        answer.x = this.x * scalar;
+        answer.y = this.y * scalar;
+        return answer;
+    }
+
+    //Returns the normalized version of this Vector, a Vector with the same
+    //angle with magnitude 1.
+    public Vector normalize() 
+    {
+        float denom;
+        Vector answer = new Vector(0, 0);     
+        denom = (float) Math.sqrt(power(this.x, 2) + power(this.y, 2));
+        answer.x = x/denom;
+        answer.y = y/denom;
+        return answer;
+    }
+    
+    //Print 2D vector
+    public void print() 
+    {
+        System.out.print(this.x);
+        System.out.print(',');
+        System.out.print(this.y);
+    }
+    
+    public void print3D() 
+    {
+        System.out.print(this.x);
+        System.out.print(',');
+        System.out.print(this.y); 
+        System.out.print(',');
+        System.out.print(this.z); 
+    }
+    
+    //3D Vector int constructor
+    public Vector(float x, float y, float z) 
+    {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+    
+    //Cross product of 3D vector
+    public Vector crossProduct(Vector other) 
+    {
+        Vector answer = new Vector(0, 0, 0);
+        answer.x = (this.y * other.z) - (this.z * other.y);
+        answer.y = (this.z * other.x) - (this.x * other.z);
+        answer.z = (this.x * other.y) - (this.y * other.x);
+        return answer;
+    }
+    
+    //Unit vector of a 3D vector
+    public Vector normalize3D() 
+    {
+        float denom;
+        Vector answer = new Vector();   
+        denom = (float) Math.sqrt(power(this.x, 2) + power(this.y, 2) + power(this.z, 2));
+        answer.x = x/denom;
+        answer.y = y/denom;
+        answer.z = z/denom;
+        return answer;
+    }
+  
+    //Projection of a vector on another
+    public Vector projection(Vector other) 
+    {
+        float numerator = dotProduct(other);
+        float denominator = (float) Math.sqrt(power(this.x, 2) + power(this.y, 2));
+        float multiplier = numerator/power(denominator, 2);
+        Vector answer = new Vector();
+        answer.x = multiplier * this.x;
+        answer.y = multiplier * this.y;
+        return answer;
+    }
+    
+    //Dot product of a 3D vector
+    public float dotProduct3D(Vector other) 
+    {
+        float answer = (this.x * other.x) + (this.y * other.y) + (this.z * other.z);
+        return answer;
+    }
+    
+     //Projection of a 3D vector on another
+    public Vector projection3D(Vector other) 
+    {
+        float numerator = dotProduct3D(other);
+        float denominator = (float) Math.sqrt(power(this.x, 2) + power(this.y, 2) + power(this.z, 2));
+        float multiplier = numerator/power(denominator, 2);
+        Vector answer = new Vector();
+        answer.x = multiplier * this.x;
+        answer.y = multiplier * this.y;
+        return answer;
+    }
+    
+  // Manipulation functions
+  // None.  Vectors are immutable.
+
+}
+
+bash-4.2$ javac Vector.java test.java 
+bash-4.2$ ls -l
+total 25
+-rw-r--r--. 1 aljilee users  287 Jun  2 15:50 NoteToGrader.txt
+-rw-r--r--. 1 aljilee users 4096 Jun  2 15:51 pa4submissionfile.txt
+-rw-r--r--. 1 aljilee users   65 Jun  2 15:50 README.txt
+-rw-r--r--. 1 aljilee users 3544 Jun  2 15:51 test.class
+-rw-r--r--. 1 aljilee users 5288 Jun  2 15:50 test.java
+-rw-r--r--. 1 aljilee users 2701 Jun  2 15:51 Vector.class
+-rw-r--r--. 1 aljilee users 5392 Jun  2 15:50 Vector.java
+bash-4.2$ cat test.java
+//CREATED: ALEXANDER LEE 06/03/2018
+
+import java.io.*;
+import java.util.*;
+import java.math.*;
+
+public class test {
+    public static void main (String args[]) 
+    {
+        //Test Vector class
+        System.out.println("Vector class testing.");
+        //Default constructor
+        System.out.println("Default constructor test:");
+        Vector v1 = new Vector();
+        v1.print();
+        System.out.println();
+        //Int constructor
+        System.out.println("X and Y coordinates constructor test:");
+        Vector v2 = new Vector(10, 5);
+        v2.print();
+        System.out.println();
+        //Polar Vector
+        System.out.println("Polar vector constructor test:");
+        Vector v3 = new Vector();
+        v3 = v3.polarVector((float) Math.PI, 2);
+        v3.print();
+        System.out.println();
+        //Return x;
+        System.out.println("Get x test:");
+        float x1 = v2.getX();
+        System.out.println("X value of v2 = " + x1);
+        //Return y;
+        System.out.println("Get y test:");
+        float y1 = v2.getY();
+        System.out.println("Y value of v2 = " + y1);
+        //Return angle;
+        System.out.println("Get angle test:");
+        float a1 = v3.getAngle();
+        System.out.println("Angle of v3 = " + a1 + " radians");
+        //Return magnitude;
+        System.out.println("Magnitude test:");
+        float m1 = v3.getMagnitude();
+        System.out.println("Magnitude of v3 = " + m1);
+        //Add 2 vectors;
+        System.out.println("Add vectors test:");
+        Vector v4 = new Vector(20, 10);
+        v2.print();
+        System.out.print(" + ");
+        v4.print();
+        System.out.print(" = ");
+        Vector v5 = new Vector();
+        v5 = v2.add(v4);
+        v5.print();
+        System.out.println();
+        //Subtract 2 vectors;
+        System.out.println("Subtract vectors test:");
+        Vector v6 = new Vector(30, 15);
+        Vector v7 = new Vector(20, 20);
+        Vector v8 = new Vector();
+        v6.print();
+        System.out.print(" - ");
+        v7.print();
+        System.out.print(" = ");
+        v8 = v6.subtract(v7);
+        v8.print();
+        System.out.println();
+        //Dot product of 2 vectors;
+        System.out.println("Dot product test:");
+        float dp;
+        System.out.print("Dot product of ");
+        v6.print();
+        System.out.print(" & ");
+        v7.print();
+        System.out.print(" = ");
+        dp = v6.dotProduct(v7);
+        System.out.println(dp);
+        //Scalar multiplication
+        System.out.println("Scalar Multiply test:");
+        Vector v9 = new Vector();
+        float s1 = 3;
+        System.out.print("Scalar of ");
+        v6.print();
+        System.out.print(" & ");
+        System.out.print(s1);
+        System.out.print(" = ");
+        v9 = v6.scalarMultiply(s1);
+        v9.print();
+        System.out.println();
+        //Normalize a vector;
+        System.out.println("Normalize Vector test:");
+        Vector v10 = new Vector();
+        System.out.print("Normalization of ");
+        v9.print();
+        System.out.print(" = ");
+        v10 = v9.normalize();
+        v10.print();
+        System.out.println();
+        //Create a 3D vector
+        System.out.println("3D vector test");
+        Vector v11 = new Vector(1, 2, 3);
+        v11.print3D();
+        System.out.println();
+        //Cross product of 2 vectors;
+        System.out.println("Cross product test:");
+        Vector v12 = new Vector(1, 5, 7);
+        Vector v13 = new Vector();
+        System.out.print("Cross product of ");
+        v11.print3D();
+        System.out.print(" & ");
+        v12.print3D();
+        System.out.print(" = ");
+        v13 = v11.crossProduct(v12);
+        v13.print3D();
+        System.out.println();
+        //Unit vector of a 3D vector
+        System.out.println("Unit vector of 3D vector test:");
+        Vector v14 = new Vector();
+        System.out.print("Unit vector of ");
+        v13.print3D();
+        System.out.print(" = ");
+        v14 = v13.normalize3D();
+        v14.print3D();
+        System.out.println();
+        //Projection of a vector onto another
+        System.out.println("Vector projection test:");
+        Vector v15 = new Vector(1, 2);
+        Vector v16 = new Vector(3, -8);
+        Vector v17 = new Vector();
+        System.out.print("Projection of ");
+        v16.print();
+        System.out.print(" onto ");
+        v15.print();
+        System.out.print(" = ");
+        v17 = v15.projection(v16);
+        v17.print();
+        System.out.println();     
+        //Dot product of 3D vector
+        System.out.println("Dot product of 3D Vector test:");
+        System.out.print("Dot product of : ");
+        v12.print3D();
+        System.out.print(" & ");
+        v13.print3D();
+        System.out.print(" = ");
+        float p2 = v12.dotProduct3D(v13);
+        System.out.print(p2);
+        System.out.println();
+        //Prjection of a 3D vector onto another
+        System.out.println("3D Vector projection test:");
+        Vector v18 = new Vector();
+        System.out.print("Projection of ");
+        v13.print3D();
+        System.out.print(" onto ");
+        v12.print3D();
+        System.out.print(" = ");
+        v18 = v12.projection3D(v13);
+        v18.print3D();
+        System.out.println();
+    }
+}
+
+bash-4.2$ java test.[K
+Vector class testing.
+Default constructor test:
+0.0,0.0
+X and Y coordinates constructor test:
+10.0,5.0
+Polar vector constructor test:
+-2.0,-1.7484555E-7
+Get x test:
+X value of v2 = 10.0
+Get y test:
+Y value of v2 = 5.0
+Get angle test:
+Angle of v3 = 3.1415927 radians
+Magnitude test:
+Magnitude of v3 = 2.0
+Add vectors test:
+10.0,5.0 + 20.0,10.0 = 30.0,15.0
+Subtract vectors test:
+30.0,15.0 - 20.0,20.0 = 10.0,-5.0
+Dot product test:
+Dot product of 30.0,15.0 & 20.0,20.0 = 900.0
+Scalar Multiply test:
+Scalar of 30.0,15.0 & 3.0 = 90.0,45.0
+Normalize Vector test:
+Normalization of 90.0,45.0 = 0.8944272,0.4472136
+3D vector test
+1.0,2.0,3.0
+Cross product test:
+Cross product of 1.0,2.0,3.0 & 1.0,5.0,7.0 = -1.0,-4.0,3.0
+Unit vector of 3D vector test:
+Unit vector of -1.0,-4.0,3.0 = -0.19611613,-0.78446454,0.5883484
+Vector projection test:
+Projection of 3.0,-8.0 onto 1.0,2.0 = -2.6,-5.2
+Dot product of 3D Vector test:
+Dot product of : 1.0,5.0,7.0 & -1.0,-4.0,3.0 = 0.0
+3D Vector projection test:
+Projection of -1.0,-4.0,3.0 onto 1.0,5.0,7.0 = 0.0,0.0,0.0
+bash-4.2$ exit
+exit
+
+Script done on Sat 02 Jun 2018 03:52:37 PM PDT

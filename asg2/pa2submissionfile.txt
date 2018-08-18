@@ -1,0 +1,386 @@
+Script started on Tue 01 May 2018 07:30:34 PM PDT
+[?1034hbash-4.2$ pwd
+/afs/cats.ucsc.edu/users/s/aljilee/CMPS101S18PA2/asg2
+bash-4.2$ ls -l
+total 14
+-rw-r--r--. 1 aljilee users 7200 May  1 19:22 apint.c
+-rw-r--r--. 1 aljilee users  456 May  1 19:22 apint.h
+-rw-r--r--. 1 aljilee users  272 May  1 19:22 Makefile
+-rw-r--r--. 1 aljilee users  578 May  1 19:22 NoteToGrader.txt
+-rw-r--r--. 1 aljilee users    0 May  1 19:30 pa2submissionfile.txt
+-rw-r--r--. 1 aljilee users  127 May  1 19:22 README.txt
+-rw-r--r--. 1 aljilee users 1414 May  1 19:22 test.c
+bash-4.2$ cat README.txt
+Files:
+test.c  Contains the tests listed for PA2
+apint.c Contains the required functions for PA2
+apint.h Headerfile for apint.cbash-4.2$ cat NoteToGrader.txt
+I only used C for my 12B class so I felt a lot more comfortable on PA2 than PA1. I reused the same ADT that I did in java, using an array to represent the big integer. Each position of the array represented 1 digit of the big integer. I used the same approach as PA1 for addition and subtraction, adding and subtracting the corresponding digits accordingly. For multiplication, I took a different approach. Instead of going through the struggle of hard coding long multiplication, I used addition to multiply. For example, if I were to do 5 * 4, I would add 5 to itself 4 times.bash-4.2$ cat apint.c
+//CREATED: ALEXANDER J. LEE 5/1/2018
+
+# include <stdio.h>
+# include <stdlib.h>
+# include <stdbool.h>
+# include <string.h>
+# include <ctype.h>
+# include "apint.h"
+
+//Initialize apint ADT
+apint *init(char * sign, char * val) 
+{
+    //Initialize array and convert to int
+    apint *myapint = calloc(1, sizeof(apint));
+    myapint->val = calloc(1000, sizeof(int));
+    int x = 0;
+    int y = 0; 
+    int length = 0;
+    fflush(stdin);
+    
+    //Set sign
+    if (sign[0] == '-') 
+    {
+        myapint->isPos = 0;
+    } else 
+    {
+        myapint->isPos = 1;
+    }
+    //Convert char * to int *
+    while (val[y] != '\0') 
+    {
+        if (isdigit(val[y])) 
+        {
+            myapint->val[x++] = val[y++]-'0';
+            length++;
+        }
+        else y++;
+    }
+    //Keep track of length of *
+    myapint->length = length;
+    return myapint;
+}
+
+//Default "constructor"
+apint *newapint() 
+{
+    apint *myapint = init("", "");
+    return myapint;
+}
+
+//Only string input
+apint *newapintSTR(char * val) 
+{
+    apint *myapint = init ("+", val);
+    return myapint;
+}
+
+//Only integer input
+apint *newapintINT(int val) 
+{
+    char * apintVal = malloc(16); 
+    sprintf(apintVal, "%d", val);
+    //Initialize apint 
+    if (val >= 0) 
+    {
+        apint *myapint = init("+", apintVal);  
+        return myapint;
+    } else 
+    {
+        apint *myapint = init("-", apintVal);
+        return myapint;
+    }
+}
+
+//Shifts array if not equal
+int * shift (apint * myapint, int numShift) 
+{
+    int * shifted = calloc(myapint->length + numShift, sizeof(int));
+    for (int i = 0; i < myapint->length + numShift; i++) 
+    {
+        shifted[i + numShift] = myapint->val[i];
+    }
+    return shifted;
+}
+
+//Print ADT
+void print(apint *myapint) 
+{
+    if (myapint->isPos == false) 
+    {
+        printf("-");
+    }
+    for (int i = 0; i < myapint->length; i++) 
+    {
+        printf("%d", myapint->val[i]);
+    }
+}
+
+//Prints arithmetic that you are doing
+void printOp(apint * n1, apint * n2, char * op) 
+{
+    print(n1);
+    printf(" %c ", op[0]);
+    print(n2);
+    printf(" = ");
+}
+
+//Additing 2 apints
+apint *addapint(apint * numOne, apint * numTwo) 
+{
+    int addLength;
+    int sum;
+    
+    apint *ans = init("", "");
+
+    //Scenario +-
+    if (numOne->isPos == 1 && numTwo->isPos == 0) 
+    {
+        numTwo->isPos = 1;
+        ans = subapint(numOne, numTwo); //Subtract if first num is + and second is - 
+        return ans;
+    }
+    //Scenario -+
+    if (numOne->isPos == 0 && numTwo->isPos == 1) 
+    {
+        numTwo->isPos = 0;
+        ans = subapint(numOne, numTwo); //Subtract if first num is - and second is +
+        return ans;
+    } 
+    //Find add length and shift shorter array if length not equal
+    if (numOne->length > numTwo->length) 
+    {
+        addLength = numOne->length;
+        numTwo->val = shift(numTwo, numOne->length - numTwo->length);
+        numTwo->length = addLength;
+    } else if (numOne->length < numTwo->length) 
+    {
+        addLength = numTwo->length;
+        numOne->val = shift(numOne, numTwo->length - numOne->length);
+        numOne->length = addLength;
+    } else 
+    {
+        addLength = numOne->length;
+    }
+    
+    //Scenario ++ --
+    for (int i = addLength - 1; i > 0; i--) 
+    {
+        sum = numOne->val[i] + numTwo->val[i];
+        ans->val[i] = abs(sum % 10);
+        //Carry if sum >= 10
+        if (sum >= 10) 
+        {
+            numOne->val[i - 1] += 1;    
+        }
+    }
+    //Don't need to carry last digits added
+    sum = numOne->val[0] + numTwo->val[0];
+    ans->val[0] = sum;
+    //Shift digits to the right by 1 if final digit greater than 10
+    if (ans->val[0] >= 10) 
+    {
+        for (int j = numOne->length; j > 0; j--) {
+            ans->val[j + 1] = ans->val[j];
+        }
+        ans->val[1] = ans->val[0] % 10;
+        ans->val[0] = (ans->val[0]/10) % 10;
+        ans->length = numOne->length + 1;    
+    } else 
+    {
+        ans->length = numOne->length;    
+    }
+    return ans;
+}
+
+//Subtracting 2 apints
+apint *subapint(apint * numOne, apint * numTwo) 
+{
+    apint *ans = init("", "");
+    //Scenario +-
+    if (numOne->isPos == 1 && numTwo->isPos == 0) 
+    {
+        numTwo->isPos = 1;
+        ans = addapint(numOne, numTwo); //Add two numbers if first num is + and second is - 
+        return ans;
+    }
+    //Scenario -+
+    if (numOne->isPos == 0 && numTwo->isPos == 1) 
+    {
+        numTwo->isPos = 0;
+        ans = addapint(numOne, numTwo); //Add two numbers if first num is - and second is +
+        return ans;
+    }
+    //Initialize variables
+    int subLength;
+    int diff;
+    int * temp;
+    
+    //Find sub length (length of number of numbers we subtract)
+    if (numOne->length > numTwo->length) 
+    {
+        subLength = numOne->length;
+        numTwo->val = shift(numTwo, numOne->length - numTwo->length);
+    } else if (numOne->length < numTwo->length) 
+    {
+        //Exchange arrays if first number is greater than second
+        subLength = numTwo->length;
+        numOne->val = shift(numOne, numTwo->length - numOne->length);
+        temp = numOne->val;
+        numOne->val = numTwo->val;
+        numTwo->val = temp;
+        ans->isPos = 0;
+    } else 
+    {
+        for (int j = 0; j < numOne->length; j++) 
+        {
+            if (numOne->val[j] < numTwo->val[j]) 
+            {
+                //Exchange arrays if first number is greater than second
+                subLength = numTwo->length;
+                numOne->val = shift(numOne, numTwo->length - numOne->length);
+                temp = numOne->val;
+                numOne->val = numTwo->val;
+                numTwo->val = temp;
+                ans->isPos = 0;
+                break;
+            } else if (numOne->val[j] > numTwo->val[j]) 
+            {
+                subLength = numOne->length;
+                break;
+            }
+        }
+        subLength = numOne->length;
+    }
+    //Subtraction algorithm
+    for (int i = subLength - 1; i >= 0; i--) 
+    {
+        if (numOne->val[i] < numTwo->val[i] && i != 0) 
+        {
+            //Borrowing
+            numOne->val[i] = numOne->val[i] + 10;
+            numOne->val[i - 1] = numOne->val[i - 1] - 1;
+        }
+        diff = numOne->val[i] - numTwo->val[i];
+        ans->val[i] = diff % 10;
+    }    
+    ans->length = subLength;
+    //Shift to left if first digit is 0
+    int shiftNum = 0;
+    
+    if (ans->val[0] == 0) 
+    {
+        for (int i = 0; i < ans->length; i++) 
+        {
+            if (ans->val[i] == 0) 
+            {
+                shiftNum++;
+            } else 
+            {
+                break;
+            }
+        }
+        ans->length = ans->length - (shiftNum - 1);
+        for (int j = 0; j < ans->length; j++) 
+        {
+            ans->val[j] = ans->val[j + (shiftNum - 1)];
+        }
+    }
+    return ans;
+}
+//Multiplying 2 apints
+void mulapint(apint * numOne, apint * numTwo) 
+{
+    apint *one = init ("+", "1");
+    apint *product = init("", "");
+    //Add numOne->val to itself numTwo->val times
+    while (numTwo->isPos == 1) 
+    {
+        product = addapint(product, numOne);
+        numTwo = subapint(numTwo, one);
+        one->val[0] = 1;
+    }
+    product = subapint(product, numOne);
+    print(product);
+}
+    
+bash-4.2$ make
+gcc -Wall -Wextra -Wpedantic -Werror -std=c99 -c apint.c
+gcc -Wall -Wextra -Wpedantic -Werror -std=c99   -c -o test.o test.c
+gcc -Wall -Wextra -Wpedantic -Werror -std=c99 apint.o test.o -Wall -Wextra -Wpedantic -Werror -std=c99 -o test
+bash-4.2$ ls -l
+total 46
+-rw-r--r--. 1 aljilee users  7200 May  1 19:22 apint.c
+-rw-r--r--. 1 aljilee users   456 May  1 19:22 apint.h
+-rw-r--r--. 1 aljilee users  6592 May  1 19:30 apint.o
+-rw-r--r--. 1 aljilee users   272 May  1 19:22 Makefile
+-rw-r--r--. 1 aljilee users   578 May  1 19:22 NoteToGrader.txt
+-rw-r--r--. 1 aljilee users  8192 May  1 19:30 pa2submissionfile.txt
+-rw-r--r--. 1 aljilee users   127 May  1 19:22 README.txt
+-rwxr-xr-x. 1 aljilee users 13160 May  1 19:30 test
+-rw-r--r--. 1 aljilee users  1414 May  1 19:22 test.c
+-rw-r--r--. 1 aljilee users  3856 May  1 19:30 test.o
+bash-4.2$ cat test.c
+//CREATED: ALEXANDER J. LEE 5/1/2018
+
+# include <stdio.h>
+# include <stdlib.h>
+# include <stdbool.h>
+# include "apint.h"
+
+int main() 
+{
+    printf("Default constructor test \n");
+    apint *ans = newapint();
+    apint *num1 = newapint();                     // Test 1
+    print(num1);
+    printf("String constructor test \n");
+    apint *num2 = newapintSTR("643996950734");    // Test 2
+    print(num2);
+    printf("\n");
+    printf("Integer constructor test \n");
+    apint *num3 = newapintINT(594083);            // Test 3
+    print(num3);
+    printf("\n");
+    apint *num4 = init("+", "649503809215");
+    apint *num5 = newapintINT(64389);
+    apint *num6 = newapintSTR("29499453999");
+    apint *num7 = newapintSTR("543982190985");
+    printf("Addition test \n");                   // Test 4
+    printOp(num2, num4, "+");
+    ans = addapint(num2, num4);
+    print(ans);
+    printf("\n");
+    printf("Subtraction test 1\n");               // Test 5
+    printOp(num3, num5, "-");
+    ans = subapint(num3, num5);
+    print(ans);
+    printf("\n");
+    printf("Subraction test 2 \n");               // Test 6
+    printOp(num6, num7, "-");
+    ans = subapint(num6, num7);
+    print(ans);
+    printf("\n");
+    printf("Multiplication test \n");             // Test 7
+    apint *num8 = init("+","6943899");
+    apint *num9 = init("+", "96493");
+    printOp(num8, num9, "*");
+    mulapint(num8 , num9);
+    return 0;
+}
+bash-4.2$ ./test
+Default constructor test 
+String constructor test 
+643996950734
+Integer constructor test 
+594083
+Addition test 
+643996950734 + 649503809215 = 1293500759949
+Subtraction test 1
+594083 - 64389 = 529694
+Subraction test 2 
+29499453999 - 543982190985 = -514482736986
+Multiplication test 
+exit
+6943899 * 96493 = 670037646207bash-4.2$ exit
+exit
+
+Script done on Tue 01 May 2018 07:31:16 PM PDT
